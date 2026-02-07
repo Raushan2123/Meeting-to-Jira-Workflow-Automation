@@ -1,0 +1,133 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: mtj_postgres
+    environment:
+      POSTGRES_USER: mtj
+      POSTGRES_PASSWORD: mtj_password
+      POSTGRES_DB: mtj_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - mtj_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mtj -d mtj_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7
+    container_name: mtj_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - mtj_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: mtj_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: mtj_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  init-kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: mtj_init_kafka
+    depends_on:
+      - kafka
+    volumes:
+      - ./kafka/create-topics.sh:/kafka/create-topics.sh:ro
+    entrypoint: ["/bin/bash", "/kafka/create-topics.sh"]
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: mtj_api
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      init-kafka:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+    volumes:
+      - mtj_uploads:/data/uploads
+
+  asr_worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker
+    container_name: mtj_asr_worker
+    env_file:
+      - ../.env
+    depends_on:
+      api:
+        condition: service_started
+    command: ["python", "-m", "apps.workers.asr_worker"]
+    volumes:
+      - mtj_uploads:/data/uploads
+
+  extract_worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker
+    container_name: mtj_extract_worker
+    env_file:
+      - ../.env
+    depends_on:
+      api:
+        condition: service_started
+    command: ["python", "-m", "apps.workers.extract_worker"]
+
+  jira_worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker
+    container_name: mtj_jira_worker
+    env_file:
+      - ../.env
+    depends_on:
+      api:
+        condition: service_started
+    command: ["python", "-m", "apps.workers.jira_worker"]
+
+volumes:
+  mtj_postgres_data:
+  mtj_redis_data:
+  mtj_uploads:

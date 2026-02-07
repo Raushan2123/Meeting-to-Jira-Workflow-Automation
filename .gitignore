@@ -1,0 +1,93 @@
+# ===============================
+# Python
+# ===============================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# ===============================
+# Environment & secrets
+# ===============================
+.env
+.env.*
+!.env.example
+.env.example
+
+# ===============================
+# Logs
+# ===============================
+*.log
+logs/
+
+# ===============================
+# OS / Editor
+# ===============================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===============================
+# Jupyter / Notebooks
+# ===============================
+.ipynb_checkpoints/
+
+# ===============================
+# Docker
+# ===============================
+**/.dockerignore
+docker-data/
+mtj_postgres_data/
+mtj_redis_data/
+
+# ===============================
+# App runtime data
+# ===============================
+# Uploaded audio files
+data/
+uploads/
+**/uploads/
+
+# Temporary processing artifacts
+tmp/
+cache/
+
+# ===============================
+# Kafka / Redis local state
+# ===============================
+kafka-data/
+redis-data/
+
+# ===============================
+# Database
+# ===============================
+*.sqlite3
+
+# ===============================
+# Test artifacts
+# ===============================
+.coverage
+htmlcov/
+pytest_cache/
+
+# ===============================
+# Misc
+# ===============================
+*.pem
+*.key
+*.crt
+*.tar
+*.gz
