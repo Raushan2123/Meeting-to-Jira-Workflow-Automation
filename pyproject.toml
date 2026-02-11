@@ -1,0 +1,22 @@
+[project]
+name = "meeting-to-jira"
+version = "0.1.0"
+description = "Meeting to Jira workflow automation"
+requires-python = ">=3.10"
+
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "kafka-python",
+    "redis",
+    "sqlalchemy",
+    "psycopg2-binary",
+    "pydantic",
+    "python-multipart",
+    "python-dotenv",
+    "requests",
+    "faster-whisper"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

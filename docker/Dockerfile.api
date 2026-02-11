@@ -9,9 +9,17 @@ ENV PYTHONPATH=/app
 COPY pyproject.toml /app/pyproject.toml
 COPY apps /app/apps
 
-# Minimal deps (we'll refine later in pyproject)
 RUN pip install --no-cache-dir -U pip \
-    && pip install --no-cache-dir fastapi uvicorn[standard] psycopg2-binary redis
+    && pip install --no-cache-dir \
+        fastapi \
+        uvicorn[standard] \
+        kafka-python \
+        redis \
+        sqlalchemy \
+        psycopg2-binary \
+        pydantic \
+        python-multipart
 
 EXPOSE 8000
+
 CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

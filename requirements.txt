@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+
+kafka-python
+redis
+
+sqlalchemy
+psycopg2-binary
+
+pydantic
+
+python-multipart
+
+faster-whisper
+soundfile
+requests
+python-dotenv
